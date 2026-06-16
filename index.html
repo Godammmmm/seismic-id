@@ -252,7 +252,14 @@ async function extractStats(base64, mediaType){
   if (!res.ok) throw new Error("Worker request failed: " + res.status);
   const data = await res.json();
   if (!data.result) throw new Error("Tidak ada hasil dari AI");
-  return JSON.parse(data.result);
+  
+  // --- WARISAN ANTI-CRASH JALUR JSON ---
+  try {
+    return JSON.parse(data.result);
+  } catch (e) {
+    // Jika isinya teks eror biasa dari Gemini, langsung muntahkan teksnya ke layar
+    throw new Error(data.result);
+  }
 }
 
 function roundRect(ctx, x, y, w, h, r){
