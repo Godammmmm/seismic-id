@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seismic ID Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e0a08;
+    --panel:#1a120c;
+    --panel-2:#2b1f17;
+    --gold:#c9a36a;
+    --gold-soft:#a89070;
+    --cream:#f5e6d3;
+    --border:#b8915c;
+    --danger:#d4664a;
+    --ok:#9bbf7a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--cream);
+    font-family:'Space Mono',monospace;
+    position:relative;
+    overflow-x:hidden;
+  }
+  .glow{position:fixed;border-radius:50%;filter:blur(80px);opacity:.18;pointer-events:none;}
+  .glow-1{width:520px;height:520px;background:#7a5a32;top:-180px;left:-180px;}
+  .glow-2{width:480px;height:480px;background:#5a3a52;bottom:-160px;right:-160px;}
+  main{
+    position:relative;
+    max-width:680px;
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  .eyebrow{
+    text-align:center;
+    font-size:12px;
+    letter-spacing:4px;
+    color:var(--gold);
+    margin:0 0 12px;
+  }
+  h1{
+    text-align:center;
+    font-family:'Cinzel',serif;
+    font-weight:600;
+    font-size:38px;
+    letter-spacing:2px;
+    margin:0 0 14px;
+    color:var(--cream);
+  }
+  .sub{
+    text-align:center;
+    font-size:13px;
+    line-height:1.8;
+    color:var(--gold-soft);
+    max-width:480px;
+    margin:0 auto 40px;
+  }
+  form{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    background:var(--panel);
+    border:1px solid #3a2c1f;
+    border-radius:16px;
+    padding:28px;
+  }
+  label{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    font-size:11px;
+    letter-spacing:2px;
+    color:var(--gold);
+  }
+  input[type=text], input[type=number]{
+    background:var(--panel-2);
+    border:1px solid #3a2c1f;
+    border-radius:8px;
+    padding:10px 12px;
+    color:var(--cream);
+    font-family:'Space Mono',monospace;
+    font-size:13px;
+    letter-spacing:1px;
+  }
+  input[type=text]:focus, input[type=number]:focus{
+    outline:none;
+    border-color:var(--border);
+  }
+  #region{text-transform:uppercase;}
+  .file-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  input[type=file]{
+    flex:1;
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--gold-soft);
+  }
+  .thumb{
+    width:48px;height:48px;border-radius:8px;
+    background:var(--panel-2);
+    border:1px solid #3a2c1f;
+    object-fit:cover;
+    display:none;
+  }
+  .hint{font-size:11px;color:var(--gold-soft);letter-spacing:0.5px;}
+  button{
+    margin-top:6px;
+    background:var(--gold);
+    color:#3a2812;
+    border:none;
+    border-radius:24px;
+    padding:14px;
+    font-family:'Space Mono',monospace;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:3px;
+    cursor:pointer;
+    transition:opacity .15s;
+  }
+  button:disabled{opacity:.5;cursor:default;}
+  button:hover:not(:disabled){opacity:.85;}
+  #status{
+    margin-top:18px;
+    font-size:12px;
+    letter-spacing:1px;
+    text-align:center;
+    min-height:18px;
+  }
+  #status.error{color:var(--danger);}
+  #status.ok{color:var(--ok);}
+  #result{
+    margin-top:32px;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+  canvas{
+    width:100%;
+    max-width:560px;
+    border-radius:16px;
+  }
+  #download{
+    width:auto;
+    padding:12px 32px;
+    border-radius:24px;
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--gold);
+  }
+</style>
+</head>
+<body>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<main>
+  <p class="eyebrow">SEISMIC // ID</p>
+  <h1>FORGE YOUR ID</h1>
+  <p class="sub">Isi data kamu, upload foto/art, lalu upload screenshot statistik dari SeismicTracker. Nama di form harus sama dengan nama di screenshot.</p>
+
+  <form id="form">
+    <label>NAMA DISCORD
+      <input type="text" id="name" required placeholder="contoh: Godam">
+    </label>
+
+    <label>REGION
+      <input type="text" id="region" required placeholder="INDONESIA">
+    </label>
+
+    <label>MAG LEVEL
+      <input type="number" id="mag" required min="0" step="1" placeholder="6">
+    </label>
+
+    <label>FOTO / AVATAR
+      <div class="file-row">
+        <input type="file" id="avatar" accept="image/*" required>
+        <img class="thumb" id="avatarThumb" alt="">
+      </div>
+    </label>
+
+    <label>SCREENSHOT STATISTIK (SeismicTracker)
+      <div class="file-row">
+        <input type="file" id="stats" accept="image/*" required>
+      </div>
+      <span class="hint">Pastikan nama "Statistics for ..." di screenshot terbaca jelas.</span>
+    </label>
+
+    <button type="submit" id="submitBtn">FORGE ID</button>
+  </form>
+
+  <div id="status"></div>
+
+  <div id="result">
+    <canvas id="card" width="720" height="460"></canvas>
+    <button id="download">DOWNLOAD CARD</button>
+  </div>
+</main>
+
+<script>
+const form = document.getElementById('form');
+const statusEl = document.getElementById('status');
+const resultEl = document.getElementById('result');
+const submitBtn = document.getElementById('submitBtn');
+const avatarInput = document.getElementById('avatar');
+const avatarThumb = document.getElementById('avatarThumb');
+
+avatarInput.addEventListener('change', () => {
+  const f = avatarInput.files[0];
+  if (!f) return;
+  const url = URL.createObjectURL(f);
+  avatarThumb.src = url;
+  avatarThumb.style.display = 'block';
+});
+
+document.getElementById('region').addEventListener('input', e => {
+  e.target.value = e.target.value.toUpperCase();
+});
+
+function fileToBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function setStatus(text, type){
+  statusEl.textContent = text;
+  statusEl.className = type || '';
+}
+
+// GANTI URL INI setelah lo deploy Cloudflare Worker
+// contoh: https://seismic-id-proxy.godam.workers.dev
+const WORKER_URL = "https://seismic-id-proxy.godam-dn1.workers.dev";
+
+async function extractStats(base64, mediaType){
+  const res = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ imageBase64: base64, mimeType: mediaType })
+  });
+  if (!res.ok) throw new Error("Worker request failed: " + res.status);
+  const data = await res.json();
+  if (!data.result) throw new Error("Tidak ada hasil dari AI");
+  return JSON.parse(data.result);
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+function drawCard(data, avatarImg){
+  const canvas = document.getElementById('card');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, '#2b1f17');
+  grad.addColorStop(1, '#1a120c');
+  roundRect(ctx, 0, 0, W, H, 22);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#b8915c';
+  ctx.stroke();
+
+  ctx.fillStyle = '#d9b888';
+  ctx.font = '600 13px "Space Mono", monospace';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('S E I S M I C   / /   I D', 40, 50);
+
+  const magText = 'MAG ' + data.mag;
+  ctx.font = '600 12px "Space Mono", monospace';
+  const magWidth = ctx.measureText(magText).width + 36;
+  roundRect(ctx, W - 40 - magWidth, 32, magWidth, 36, 18);
+  ctx.strokeStyle = '#b8915c';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = '#d9b888';
+  ctx.textAlign = 'center';
+  ctx.fillText(magText, W - 40 - magWidth/2, 50);
+  ctx.textAlign = 'left';
+
+  const avSize = 110, avX = 40, avY = 92;
+  roundRect(ctx, avX, avY, avSize, avSize, 12);
+  ctx.save();
+  ctx.clip();
+  const scale = Math.max(avSize/avatarImg.width, avSize/avatarImg.height);
+  const dw = avatarImg.width*scale, dh = avatarImg.height*scale;
+  ctx.drawImage(avatarImg, avX + (avSize-dw)/2, avY + (avSize-dh)/2, dw, dh);
+  ctx.restore();
+  ctx.strokeStyle = '#3a2c1f';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const textX = avX + avSize + 28;
+  ctx.fillStyle = '#f5e6d3';
+  ctx.font = '600 36px "Cinzel", serif';
+  ctx.fillText(data.name, textX, avY + 40);
+
+  ctx.fillStyle = '#a89070';
+  ctx.font = '600 12px "Space Mono", monospace';
+  ctx.fillText(data.region + '  ·  SEISMIC CONTRIBUTOR', textX, avY + 76);
+
+  const gridY = avY + avSize + 36;
+  ctx.strokeStyle = '#3a2c1f';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(40, gridY - 24);
+  ctx.lineTo(W - 40, gridY - 24);
+  ctx.stroke();
+
+  const stats = [
+    ['MESSAGES', data.total_messages],
+    ['TWEETS', data.tweet_count],
+    ['ARTWORKS', data.art_count],
+    ['EVENTS JOINED', data.events_joined],
+    ['EVENTS WON', data.events_won]
+  ];
+  const colW = (W - 80) / 3;
+  stats.forEach((s, i) => {
+    const col = i % 3, row = Math.floor(i / 3);
+    const x = 40 + col*colW;
+    const y = gridY + row*64;
+    ctx.fillStyle = '#a89070';
+    ctx.font = '600 10px "Space Mono", monospace';
+    ctx.fillText(s[0], x, y);
+    ctx.fillStyle = '#f5e6d3';
+    ctx.font = '600 22px "Space Mono", monospace';
+    const val = (s[1] === null || s[1] === undefined) ? '—' : Number(s[1]).toLocaleString('en-US');
+    ctx.fillText(val, x, y + 28);
+  });
+
+  ctx.fillStyle = '#a89070';
+  ctx.font = '600 11px "Space Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('PUBLISHED 2026', W - 40, H - 36);
+  ctx.textAlign = 'left';
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  submitBtn.disabled = true;
+  resultEl.style.display = 'none';
+  setStatus('Membaca screenshot...', '');
+
+  try {
+    const name = document.getElementById('name').value.trim();
+    const region = document.getElementById('region').value.trim();
+    const mag = document.getElementById('mag').value.trim();
+    const avatarFile = avatarInput.files[0];
+    const statsFile = document.getElementById('stats').files[0];
+
+    const statsB64 = await fileToBase64(statsFile);
+    const extracted = await extractStats(statsB64, statsFile.type);
+
+    if (!extracted.name) {
+      setStatus('Nama tidak terbaca. Coba screenshot yang lebih jelas.', 'error');
+      submitBtn.disabled = false;
+      return;
+    }
+
+    const normalize = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (normalize(extracted.name) !== normalize(name)) {
+      setStatus('Nama di screenshot ("' + extracted.name + '") tidak cocok dengan nama yang diinput ("' + name + '").', 'error');
+      submitBtn.disabled = false;
+      return;
+    }
+
+    setStatus('Validasi berhasil. Membuat card...', 'ok');
+
+    const avatarB64 = await fileToBase64(avatarFile);
+    const avatarImg = new Image();
+    await new Promise((resolve, reject) => {
+      avatarImg.onload = resolve;
+      avatarImg.onerror = reject;
+      avatarImg.src = 'data:' + avatarFile.type + ';base64,' + avatarB64;
+    });
+
+    drawCard({ name, region, mag,
+      total_messages: extracted.total_messages,
+      tweet_count: extracted.tweet_count,
+      events_joined: extracted.events_joined,
+      events_won: extracted.events_won,
+      art_count: extracted.art_count
+    }, avatarImg);
+
+    resultEl.style.display = 'flex';
+    setStatus('Card berhasil dibuat.', 'ok');
+  } catch (err) {
+    console.error(err);
+    setStatus('Terjadi error: ' + err.message, 'error');
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+document.getElementById('download').addEventListener('click', () => {
+  const canvas = document.getElementById('card');
+  const link = document.createElement('a');
+  link.download = 'seismic-id.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+</script>
+</body>
+</html>
